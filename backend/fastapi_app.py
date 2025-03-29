@@ -86,18 +86,20 @@ async def detect_waste(image: UploadFile = File(...)):
         # Process results
         detections = []
         class_counts = {}
-        
+
         # Convert results to JSON-serializable format
-        for pred in results.xyxy[0]:  # Process first image predictions (batch[0])
-            x1, y1, x2, y2, conf, cls = pred.tolist()
-            class_name = results.names[int(cls)]
-            
+        for box in results[0].boxes:  # Access the first image's predictions
+            x1, y1, x2, y2 = box.xyxy[0].tolist()  # Bounding box coordinates
+            conf = box.conf[0].item()  # Confidence score
+            cls = box.cls[0].item()  # Class index
+            class_name = model.names[int(cls)]  # Class name
+
             # Update class counts
             if class_name in class_counts:
                 class_counts[class_name] += 1
             else:
                 class_counts[class_name] = 1
-            
+
             detections.append(Detection(
                 box=[float(x1), float(y1), float(x2 - x1), float(y2 - y1)],
                 class_name=class_name,
